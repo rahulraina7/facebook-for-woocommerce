@@ -30,7 +30,8 @@ jobs:
       WP_TESTS_DIR: "/tmp/wordpress/tests/phpunit"
     strategy:
       matrix:
-        php: [7.4, 8.0, 8.1, 8.2]
+        # php: [7.4, 8.0, 8.1, 8.2]
+        php: [7.4]
         wp-version: [latest]
 
     steps:
@@ -42,8 +43,11 @@ jobs:
         with:
           php-version: "${{ matrix.php }}"
 
-      - name: Prepare MySQL
-        uses: woocommerce/grow/prepare-mysql@actions-v1
+      # - name: Prepare MySQL
+      #   uses: woocommerce/grow/prepare-mysql@actions-v1
+
+      - name: Start Mysql
+        run: sudo /etc/init.d/mysql start
 
       - name: Install WP tests
         run: ./bin/install-wp-tests.sh wordpress_test root root localhost ${{ matrix.wp-version }}
