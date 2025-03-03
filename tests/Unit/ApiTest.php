@@ -2,7 +2,6 @@
 declare( strict_types=1 );
 
 use WooCommerce\Facebook\API;
-use WooCommerce\Facebook\API\FBE\Configuration\Messenger;
 use WooCommerce\Facebook\Framework\Api\Exception as ApiException;
 
 /**
@@ -168,18 +167,18 @@ class ApiTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Tests delete user permission performs a request to delete user permission.
+	 * Tests delete mbe request performs a request to delete facebook connection.
 	 *
 	 * @return void
 	 * @throws ApiException In case of failed request.
 	 */
-	public function test_delete_user_permission_deletes_user_permission_request() {
-		$user_id    = '111189594891749';
-		$permission = 'manage_business_extension';
+	public function test_delete_mbe_connection_deletes_mbe_request() {
+		$external_business_id = 'wordpress-facebook-62c3f1add134a';
 
-		$response = function( $result, $parsed_args, $url ) use ( $user_id, $permission ) {
+		$response = function( $result, $parsed_args, $url ) use ( $external_business_id ) {
 			$this->assertEquals( 'DELETE', $parsed_args['method'] );
-			$this->assertEquals( "{$this->endpoint}{$this->version}/{$user_id}/permissions/{$permission}", $url );
+			$this->assertEquals( "{$this->endpoint}{$this->version}/fbe_business/fbe_installs", $url );
+			$this->assertEquals( '{"fbe_external_business_id":"wordpress-facebook-62c3f1add134a"}', $parsed_args['body'] );
 			return [
 				'body'     => '{"success":true}',
 				'response' => [
@@ -190,7 +189,7 @@ class ApiTest extends WP_UnitTestCase {
 		};
 		add_filter( 'pre_http_request', $response, 10, 3 );
 
-		$response = $this->api->delete_user_permission( $user_id, $permission );
+		$response = $this->api->delete_mbe_connection( $external_business_id );
 
 		$this->assertTrue( $response->success );
 	}
@@ -208,7 +207,7 @@ class ApiTest extends WP_UnitTestCase {
 			$this->assertEquals( 'GET', $parsed_args['method'] );
 			$this->assertEquals( "{$this->endpoint}{$this->version}/fbe_business?fbe_external_business_id={$external_business_id}", $url );
 			return [
-				'body'     => '{"business":{"name":"WordPress-Facebook"},"catalogs":[{"feature_instance_id":"562415265365817","enabled":true}],"catalog_feed_scheduled":{"enabled":false},"fb_shops":[{"feature_instance_id":"554457382898066","enabled":true}],"ig_cta":{"enabled":false},"ig_shopping":{"enabled":false},"messenger_chat":{"enabled":false},"messenger_chats":[{"enabled":false}],"messenger_menu":{"enabled":false},"page_card":{"enabled":false},"page_cta":{"enabled":false},"page_post":{"enabled":false},"page_shop":{"enabled":false},"pixels":[{"feature_instance_id":"762898101511280","enabled":true}],"thread_intent":{"enabled":false}}',
+				'body'     => '{"business":{"name":"WordPress-Facebook"},"catalogs":[{"feature_instance_id":"562415265365817","enabled":true}],"catalog_feed_scheduled":{"enabled":false},"fb_shops":[{"feature_instance_id":"554457382898066","enabled":true}],"ig_cta":{"enabled":false},"ig_shopping":{"enabled":false},"page_card":{"enabled":false},"page_cta":{"enabled":false},"page_post":{"enabled":false},"page_shop":{"enabled":false},"pixels":[{"feature_instance_id":"762898101511280","enabled":true}],"thread_intent":{"enabled":false}}',
 				'response' => [
 					'code'    => 200,
 					'message' => 'OK',
@@ -219,46 +218,8 @@ class ApiTest extends WP_UnitTestCase {
 
 		$response = $this->api->get_business_configuration( $external_business_id );
 
-		$configuration = $response->get_messenger_configuration();
-
-		$this->assertFalse( $configuration->is_enabled() );
 		$this->assertFalse( $response->is_ig_shopping_enabled() );
 		$this->assertFalse( $response->is_ig_cta_enabled() );
-	}
-
-	/**
-	 * Tests update messenger configuration sends data to Facebook.
-	 *
-	 * @return void
-	 * @throws ApiException In case of network request error.
-	 */
-	public function test_update_messenger_configuration_sends_message_configuration_update_request() {
-		$external_business_id = 'wordpress-facebook-62c3f1add134a';
-		$configuration        = new Messenger(
-			[
-				'enabled'        => true,
-				'default_locale' => '',
-				'domains'        => [ 'https://wordpress-facebook.ddev.site/' ],
-			]
-		);
-
-		$response = function( $result, $parsed_args, $url ) use ( $external_business_id ) {
-			$this->assertEquals( 'POST', $parsed_args['method'] );
-			$this->assertEquals( "{$this->endpoint}{$this->version}/fbe_business?fbe_external_business_id={$external_business_id}", $url );
-			$this->assertEquals( '{"fbe_external_business_id":"' . $external_business_id . '","messenger_chat":{"enabled":true,"domains":["https:\/\/wordpress-facebook.ddev.site\/"]}}', $parsed_args['body'] );
-			return [
-				'body'     => '{"success":true}',
-				'response' => [
-					'code'    => 200,
-					'message' => 'OK',
-				],
-			];
-		};
-		add_filter( 'pre_http_request', $response, 10, 3 );
-
-		$response = $this->api->update_messenger_configuration( $external_business_id, $configuration );
-
-		$this->assertTrue( $response->success );
 	}
 
 	/**
@@ -753,5 +714,65 @@ class ApiTest extends WP_UnitTestCase {
 			],
 			$response->data
 		);
+	}
+
+	/**
+	 * Tests create feed request to Facebook.
+	 *
+	 * @return void
+	 * @throws ApiException In case of network request error.
+	 */
+	public function test_create_feed_request() {
+		$facebook_product_catalog_id = '726635365295186';
+
+		$data = [
+			'name' => "Test feed name.",
+		];
+
+		$response = function( $result, $parsed_args, $url ) use ( $facebook_product_catalog_id ) {
+			$this->assertEquals( 'POST', $parsed_args['method'] );
+			$this->assertEquals( "{$this->endpoint}{$this->version}/{$facebook_product_catalog_id}/product_feeds", $url );
+			return [
+				'body'     => '{"id":"1068839467367301"}',
+				'response' => [
+					'code'    => 200,
+					'message' => 'OK',
+				],
+			];
+		};
+		add_filter( 'pre_http_request', $response, 10, 3 );
+
+		$response_feed = $this->api->create_feed( $facebook_product_catalog_id, $data );
+
+		$this->assertEquals( '1068839467367301', $response_feed['id'] );
+	}
+
+	/**
+	 * Tests create feed upload request to Facebook.
+	 *
+	 * @return void
+	 * @throws ApiException In case of network request error.
+	 */
+	public function test_create_upload_request() {
+		$product_feed_id = '1068839467367301';
+
+		$data = [
+			'url' => 'http://example.com/?wc-api=wc_facebook_get_feed_data&secret=c4b8c3c46145aac6519e3f8a28bc86f2',
+		];
+
+		$response = function( $result, $parsed_args, $url ) use ( $product_feed_id ) {
+			$this->assertEquals( 'POST', $parsed_args['method'] );
+			$this->assertEquals( "{$this->endpoint}{$this->version}/{$product_feed_id}/uploads", $url );
+			return [
+				'response' => [
+					'code'    => 200,
+					'message' => 'OK',
+				],
+			];
+		};
+		add_filter( 'pre_http_request', $response, 10, 3 );
+
+		$response = $this->api->create_upload( $product_feed_id, $data );
+		$this->assertFalse( $response->has_api_error() );
 	}
 }

@@ -1,8 +1,8 @@
 {
   "name": "facebook-for-woocommerce",
-  "version": "3.1.5",
+  "version": "3.4.1",
   "author": "Facebook",
-  "homepage": "https://woo.com/products/facebook/",
+  "homepage": "https://woocommerce.com/products/facebook/",
   "license": "GPL-2.0",
   "repository": {
     "type": "git",
@@ -12,6 +12,7 @@
     "url": "https://wordpress.org/support/plugin/facebook-for-woocommerce"
   },
   "devDependencies": {
+    "@wordpress/env": "^9.10.0",
     "@wordpress/scripts": "^14.0.0"
   },
   "scripts": {
@@ -19,7 +20,8 @@
     "archive": "composer archive --file=$npm_package_name --format=zip",
     "postarchive": "rm -rf $npm_package_name && unzip $npm_package_name.zip -d $npm_package_name && rm $npm_package_name.zip && zip -r $npm_package_name.zip $npm_package_name && rm -rf $npm_package_name",
     "prebuild": "composer install",
-    "build": "npm run build:assets && npm run i18n",
+    "build:dev": "rm -f facebook-for-woocommerce.zip 2> /dev/null && npm run build:assets && npm run i18n",
+    "build": "npm run build:dev",
     "postbuild": "npm run archive",
     "i18n": "WP_CLI_PHP_ARGS='-d memory_limit=2048M' ./vendor/bin/wp i18n make-pot ./ i18n/languages/$npm_package_name.pot --slug=$npm_package_name --domain=$npm_package_name --exclude=bin,data,node_modules,tests,vendor",
     "generate:category_attribute_json": "php bin/GenerateCategoryAttributeMapping.php",
@@ -33,7 +35,8 @@
     "wp_org_slug": "facebook-for-woocommerce",
     "version_replace_paths": [
       "./"
-    ]
+    ],
+    "use_gh_release_notes": true
   },
   "engines": {
     "node": ">=12.22 <=16",

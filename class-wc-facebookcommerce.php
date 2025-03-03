@@ -9,7 +9,6 @@
  * @package FacebookCommerce
  */
 
-require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/includes/fbutils.php';
 
 use Automattic\WooCommerce\Admin\Features\Features as WooAdminFeatures;
@@ -63,6 +62,9 @@ class WC_Facebookcommerce extends WooCommerce\Facebook\Framework\Plugin {
 
 	/** @var WooCommerce\Facebook\AJAX Ajax handler instance */
 	private $ajax;
+
+	/** @var WooCommerce\Facebook\Checkout */
+	private $checkout;
 
 	/** @var WooCommerce\Facebook\Products\Feed product feed handler */
 	private $product_feed;
@@ -181,11 +183,11 @@ class WC_Facebookcommerce extends WooCommerce\Facebook\Framework\Plugin {
 			include_once 'facebook-commerce.php';
 
 			require_once __DIR__ . '/includes/fbproductfeed.php';
-			require_once __DIR__ . '/facebook-commerce-messenger-chat.php';
 
 			$this->heartbeat = new Heartbeat( WC()->queue() );
 			$this->heartbeat->init();
 
+			$this->checkout           			 = new WooCommerce\Facebook\Checkout();
 			$this->product_feed              = new WooCommerce\Facebook\Products\Feed();
 			$this->products_stock_handler    = new WooCommerce\Facebook\Products\Stock();
 			$this->products_sync_handler     = new WooCommerce\Facebook\Products\Sync();
@@ -394,7 +396,7 @@ class WC_Facebookcommerce extends WooCommerce\Facebook\Framework\Plugin {
 				// translators: No items found text
 				'not_found'                  => sprintf( esc_html__( 'No %s found.', 'facebook-for-woocommerce' ), $plural ),
 				// translators: Search label
-				'search_items'               => sprintf( esc_html__( 'Search %s.', 'facebook-for-woocommerce' ), $plural ),
+				'search_items'               => sprintf( esc_html__( 'Search %s', 'facebook-for-woocommerce' ), $plural ),
 				// translators: Text label
 				'separate_items_with_commas' => sprintf( esc_html__( 'Separate %s with commas', 'facebook-for-woocommerce' ), $plural ),
 				// translators: Text label
@@ -710,7 +712,7 @@ class WC_Facebookcommerce extends WooCommerce\Facebook\Framework\Plugin {
 	 * @return string
 	 */
 	public function get_documentation_url() {
-		return 'https://woo.com/document/facebook-for-woocommerce/';
+		return 'https://woocommerce.com/document/facebook-for-woocommerce/';
 	}
 
 
@@ -734,7 +736,7 @@ class WC_Facebookcommerce extends WooCommerce\Facebook\Framework\Plugin {
 	 * @return string
 	 */
 	public function get_sales_page_url() {
-		return 'https://woo.com/products/facebook/';
+		return 'https://woocommerce.com/products/facebook/';
 	}
 
 
